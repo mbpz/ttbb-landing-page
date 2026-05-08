@@ -4,8 +4,8 @@
 # Phase 3 精细化规则引擎
 
 search:
-  # 可配置的 GitHub 项目字段
-  project_fields: [name, description, url, stargazerCount, updatedAt, primaryLanguage]
+  # 可配置的 GitHub 项目字段（逗号分隔字符串）
+  project_fields: "name,description,url,stargazerCount,updatedAt,primaryLanguage"
   dimensions:
     - name: "AI编程助手"
       query: "AI coding assistant"
