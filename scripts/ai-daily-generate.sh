@@ -321,7 +321,7 @@ render_md_cards() {
     for i in $(seq 0 $((max_items - 1))); do
       jq -r --argjson idx "$i" '
         if .[$idx] != null then
-          "**[" + .[$idx].name + "](" + .[$idx].url + ")** ★ " + (.[$idx].stargazersCount | tostring) + " | `" + (.[$idx].language // "代码") + "`\n\n" + (.[$idx].description // "") + "\n"
+          "**[" + .[$idx].name + "](" + .[$idx].url + ")** ★ " + (.[$idx].stargazersCount | tostring) + " | `" + (.[$idx].language // "代码") + "`\n\n" + (.[$idx].description | gsub("\""; "") // "") + "\n"
         else
           empty
         end
