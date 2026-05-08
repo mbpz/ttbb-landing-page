@@ -126,11 +126,14 @@ if [[ -f "$RULES_FILE" ]] && command -v yq &>/dev/null && [[ "$DIMENSION_COUNT" 
     SEARCH_OUTPUT=$(gh search repos "$QUERY" --limit "$LIMIT" --sort "$SORT" --order "$ORDER" \
       --json "$PROJECT_FIELDS" 2>&1) || true
     SEARCH_EXIT=$?
-    if [[ $SEARCH_EXIT -eq 0 ]] && echo "$SEARCH_OUTPUT" | jq -e '.[]' &>/dev/null; then
+    # 检查是否是有效 JSON 数组
+    if [[ $SEARCH_EXIT -eq 0 ]] && echo "$SEARCH_OUTPUT" | jq -e 'type == "array"' &>/dev/null; then
       echo "$SEARCH_OUTPUT" > "$TEMP/$LABEL.json"
+      ARRAY_LEN=$(echo "$SEARCH_OUTPUT" | jq 'length')
+      echo "    成功: 获取 $ARRAY_LEN 个项目"
     else
       echo "    错误: gh search 失败 (exit $SEARCH_EXIT)"
-      echo "$SEARCH_OUTPUT" | head -5 | sed 's/^/      /'
+      echo "    原始输出: $SEARCH_OUTPUT" | head -5 | sed 's/^/      /'
       echo "[]" > "$TEMP/$LABEL.json"
     fi
 
@@ -148,11 +151,13 @@ else
     SEARCH_OUTPUT=$(gh search repos "$q" --limit 15 --sort stars --order desc \
       --json "$PROJECT_FIELDS" 2>&1) || true
     SEARCH_EXIT=$?
-    if [[ $SEARCH_EXIT -eq 0 ]] && echo "$SEARCH_OUTPUT" | jq -e '.[]' &>/dev/null; then
+    if [[ $SEARCH_EXIT -eq 0 ]] && echo "$SEARCH_OUTPUT" | jq -e 'type == "array"' &>/dev/null; then
       echo "$SEARCH_OUTPUT" > "$TEMP/$label.json"
+      ARRAY_LEN=$(echo "$SEARCH_OUTPUT" | jq 'length')
+      echo "    成功: 获取 $ARRAY_LEN 个项目"
     else
       echo "    错误: gh search 失败 (exit $SEARCH_EXIT)"
-      echo "$SEARCH_OUTPUT" | head -5 | sed 's/^/      /'
+      echo "    原始输出: $SEARCH_OUTPUT" | head -5 | sed 's/^/      /'
       echo "[]" > "$TEMP/$label.json"
     fi
 
