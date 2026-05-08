@@ -5,6 +5,7 @@ site_author: TTBB
 
 repo_name: mbpz/ttbb-landing-page
 repo_url: https://github.com/mbpz/ttbb-landing-page
+edit_uri: edit/main/docs/daily/
 
 theme:
   name: material
