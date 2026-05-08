@@ -1,0 +1,60 @@
+site_name: AI + Code 每日速递
+site_description: 每日搜集 GitHub AI+Code 热门开源项目，MiniMax AI 分析技术趋势
+site_url: https://mbpz.github.io/ttbb-landing-page/
+site_author: TTBB
+
+repo_name: mbpz/ttbb-landing-page
+repo_url: https://github.com/mbpz/ttbb-landing-page
+
+theme:
+  name: material
+  language: zh
+  palette:
+    - scheme: dark
+      primary: indigo
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: light
+      primary: indigo
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: date
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - pymdownx.mark
+  - attr_list
+  - md_in_html
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/mbpz/ttbb-landing-page
+
+nav:
+  - 首页: index.md
+  - 每日汇总: "daily/index.md"
