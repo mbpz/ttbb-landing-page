@@ -186,6 +186,16 @@ ttbb-landing-page/
 
 ---
 
+## 触发机制
+
+| 触发方式 | 说明 |
+|----------|------|
+| 定时触发 | 每天北京时间 9:00 自动运行 |
+| 手动触发 | GitHub Actions → "AI Daily Update" → "Run workflow" |
+| 代码更新 | push 到 main 不会自动触发 workflow（避免循环），手动触发即可 |
+
+**注意**：定时任务生成内容并 push 到 main 后，GitHub Pages 会自动从 main 分支部署。
+
 ## 下一步行动
 
 **所有 Phase 已完成。v0.2 版本功能完备。**
