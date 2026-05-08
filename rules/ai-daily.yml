@@ -39,8 +39,23 @@ search:
       tags: ["product"]
 
 llm:
-  model: "MiniMax-M2.7"
-  base_url: "https://api.minimaxi.com/anthropic"
+  # 默认提供商（可被 LLM_PROVIDER 环境变量覆盖）
+  provider: minimax
+
+  # 提供商预设 — LLM_PROVIDER 选择，支持 minimax / deepseek
+  providers:
+    minimax:
+      name: MiniMax
+      base_url: "https://api.minimax.chat/v1"
+      model: "MiniMax-M2.7"
+      api_key_env: MINIMAX_API_KEY
+    deepseek:
+      name: DeepSeek
+      base_url: "https://api.deepseek.com/v1"
+      model: "deepseek-chat"
+      api_key_env: DEEPSEEK_API_KEY
+
+  # 通用 LLM 配置
   max_tokens: 4000
   system_prompt: |
     你是 AI 技术观察员。请分析以下 GitHub trending 项目，用中文撰写一份结构化报告。
@@ -94,4 +109,11 @@ tags:
 
 # 环境变量覆盖支持
 env_override:
-  priority: ["MINIMAX_API_KEY", "MINIMAX_MODEL_NAME", "MINIMAX_BASE_URL"]
+  priority:
+    - "LLM_PROVIDER"
+    - "LLM_API_KEY"
+    - "LLM_BASE_URL"
+    - "LLM_MODEL_NAME"
+    - "MINIMAX_API_KEY"
+    - "MINIMAX_MODEL_NAME"
+    - "MINIMAX_BASE_URL"

@@ -8,6 +8,13 @@ set -euo pipefail
 TODAY=$(date +%Y-%m-%d)
 WEEKDAY=$(date +%A)
 READABLE_DATE=$(date +"%Y年%m月%d日 $WEEKDAY")
+# 支持 TARGET_DATE 环境变量指定日期（用于手动测试 CI）
+TARGET_DATE="${TARGET_DATE:-}"
+if [[ -n "$TARGET_DATE" ]]; then
+  TODAY="$TARGET_DATE"
+  WEEKDAY=$(date -d "$TARGET_DATE" +%A 2>/dev/null || date -j -f "%Y-%m-%d" "$TARGET_DATE" +%A 2>/dev/null || echo "Unknown")
+  READABLE_DATE=$(date -d "$TARGET_DATE" +"%Y年%m月%d日 $WEEKDAY" 2>/dev/null || date -j -f "%Y-%m-%d" "$TARGET_DATE" +"%Y年%m月%d日 $WEEKDAY" 2>/dev/null || echo "$TARGET_DATE")
+fi
 TEMP=$(mktemp -d)
 GH_TOKEN="${GH_TOKEN:-}"
 # 向后兼容：保留旧变量名
@@ -216,7 +223,7 @@ done
 echo "  JSON 数据保存在: $TEMP/"
 
 # ------------------------------------------------------------------------------
-echo "=== [3/7] 调用 MiniMax API 生成 AI 摘要 ==="
+echo "=== [3/7] 调用 $PROVIDER_NAME API 生成 AI 摘要 ==="
 
 build_summary_prompt() {
   # 使用配置中的 system_prompt 或默认模板
@@ -260,7 +267,7 @@ DEFAULT_PROMPT
 SUMMARY=""
 API_RESPONSE_FILE="$TEMP/api_response.json"
 if [[ -n "$LLM_API_KEY" && "$LLM_API_KEY" != "dummy" && "$LLM_API_KEY" != "sk-" ]]; then
-  echo "  调用 MiniMax API..."
+  echo "  调用 $PROVIDER_NAME API..."
   echo "  模型: $LLM_MODEL_NAME, Base URL: $LLM_BASE_URL, Max Tokens: $MAX_TOKENS"
   PROMPT_CONTENT=$(build_summary_prompt | jq -Rs .)
   HTTP_RESPONSE=$(curl -s -w "%{http_code}" -o "$API_RESPONSE_FILE" \
@@ -307,15 +314,18 @@ render_md_cards() {
   if [[ "$count" -eq 0 ]]; then
     echo "暂无项目数据"
   else
-    # 应用 max_projects_per_category 限制
-    jq -r ".[:$MAX_PROJECTS_PER_CATEGORY] | .[] | \"**[\" + .name + \"](\" + .url + \")** ★ \" + (.stargazersCount | tostring) + \" | \\`\" + (if .language then .language else \"代码\" end) + \"\\`\n\n\" + (if .description then .description else \"\" end) + \"\n\"" "$json" 2>/dev/null || true
+    # 应用 max_projects_per_category 限制，单引号 jq filter 确保 \n 正确解析为换行
+    jq -r --argjson max "$MAX_PROJECTS_PER_CATEGORY" '
+      .[:$max][] |
+      "**[" + .name + "](" + .url + ")** ★ " + (.stargazersCount | tostring) + " | `" + (.language // "代码") + "`\n\n" + (.description // "") + "\n"
+    ' "$json" 2>/dev/null || true
   fi
 }
 
 cat > "$DAILY_DIR/$TODAY.md" << MD_HEADER
 ---
 title: AI + Code 每日速递 $TODAY
-description: 每日搜集 GitHub AI+Code 热门开源项目，MiniMax AI 分析技术趋势
+description: 每日搜集 GitHub AI+Code 热门开源项目，$PROVIDER_NAME AI 分析技术趋势
 date: $TODAY
 ---
 
@@ -356,7 +366,7 @@ fi
 
 echo "" >> "$DAILY_DIR/$TODAY.md"
 echo '=== "数据来源"' >> "$DAILY_DIR/$TODAY.md"
-echo "GitHub Trending · AI 分析：MiniMax $LLM_MODEL_NAME · 最后更新：$READABLE_DATE" >> "$DAILY_DIR/$TODAY.md"
+echo "GitHub Trending · AI 分析：$PROVIDER_NAME $LLM_MODEL_NAME · 最后更新：$READABLE_DATE" >> "$DAILY_DIR/$TODAY.md"
 
 # ------------------------------------------------------------------------------
 echo "=== [5/7] 确认 MkDocs 导航 ==="
