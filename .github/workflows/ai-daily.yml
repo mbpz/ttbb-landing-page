@@ -1,12 +1,16 @@
 name: AI Daily Update
 
 on:
-  # 代码 push 到 main 不会自动触发（避免循环：生成内容 push → 触发 workflow → 循环）
-  # 手动触发：Actions 页面点击 "Run workflow" 按钮
-  # 自动触发：每天北京时间 9:00
+  # 代码推送（排除自动生成内容，避免循环触发）
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/daily/**'
+      - 'docs/data/**'
+  # 手动触发
   workflow_dispatch:
+  # 每天北京时间 9:00 = UTC 1:00
   schedule:
-    # 每天北京时间 9:00 = UTC 1:00
     - cron: "0 1 * * *"
 
 permissions:
@@ -19,7 +23,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  generate-and-deploy:
+  # Job 1: 定时/手动触发时搜集数据并生成每日 MD
+  generate:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,22 +36,18 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Ensure rules directory
-        run: mkdir -p rules
-
-      - name: Ensure data directory
-        run: mkdir -p docs/data
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: |
-          pip install yq jq
+        run: pip install yq jq
 
-      - name: Run AI Daily Script
+      - name: Ensure directories
+        run: |
+          mkdir -p rules
+          mkdir -p docs/data
 
       - name: Run AI Daily Script
         env:
@@ -57,19 +59,23 @@ jobs:
           chmod +x scripts/ai-daily-generate.sh
           bash scripts/ai-daily-generate.sh
 
-      - name: Commit & Push
+      - name: Commit & Push generated content
         run: |
-          git add docs/ rules/
+          git add docs/daily/ docs/data/
           if git diff --staged --quiet; then
-            echo "No changes to commit"
+            echo "No new daily content to commit"
           else
             ENTRY_COUNT=$(ls docs/daily/*.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
             git commit -m "docs: auto-update AI daily $(date +'%Y-%m-%d') [$ENTRY_COUNT entries]"
             git push origin main || git push -u origin main
           fi
 
-  deploy-pages:
-    needs: generate-and-deploy
+  # Job 2: 构建并部署 MkDocs 站点到 GitHub Pages
+  deploy:
+    needs: [generate]
+    if: |
+      always() &&
+      (needs.generate.result == 'success' || needs.generate.result == 'skipped')
     runs-on: ubuntu-latest
     environment:
       name: github-pages
