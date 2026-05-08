@@ -40,7 +40,7 @@ search:
 
 llm:
   model: "MiniMax-M2.7"
-  base_url: "https://api.minimax.chat/v1"
+  base_url: "https://api.minimaxi.com/anthropic"
   max_tokens: 4000
   system_prompt: |
     你是 AI 技术观察员。请分析以下 GitHub trending 项目，用中文撰写一份结构化报告。

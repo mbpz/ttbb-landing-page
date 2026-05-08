@@ -63,7 +63,7 @@ fi
 if [[ -n "${MINIMAX_BASE_URL:-}" ]]; then
   MINIMAX_BASE_URL="$MINIMAX_BASE_URL"
 else
-  MINIMAX_BASE_URL=$(get_config ".llm.base_url // \"https://api.minimax.chat/v1\"" "https://api.minimax.chat/v1")
+  MINIMAX_BASE_URL=$(get_config ".llm.base_url // \"https://api.minimaxi.com/anthropic\"" "https://api.minimaxi.com/anthropic")
 fi
 
 MAX_TOKENS=$(get_config ".llm.max_tokens // 4000" "4000")

@@ -36,10 +36,21 @@ jobs:
       - name: Ensure data directory
         run: mkdir -p docs/data
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install yq jq
+
+      - name: Run AI Daily Script
+
       - name: Run AI Daily Script
         env:
           MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
-          MINIMAX_BASE_URL: ${{ secrets.MINIMAX_BASE_URL || 'https://api.minimax.chat/v1' }}
+          MINIMAX_BASE_URL: ${{ secrets.MINIMAX_BASE_URL || 'https://api.minimaxi.com/anthropic' }}
           MINIMAX_MODEL_NAME: ${{ secrets.MINIMAX_MODEL_NAME || 'MiniMax-M2.7' }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

@@ -10,3 +10,6 @@
 
 # Data (keep structure but ignore generated content)
 docs/data/
+
+# MkDocs build output (built fresh by deploy-pages job)
+site/
