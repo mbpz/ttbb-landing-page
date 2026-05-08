@@ -314,11 +314,19 @@ render_md_cards() {
   if [[ "$count" -eq 0 ]]; then
     echo "暂无项目数据"
   else
-    # 应用 max_projects_per_category 限制，单引号 jq filter 确保 \n 正确解析为换行
-    jq -r --argjson max "$MAX_PROJECTS_PER_CATEGORY" '
-      .[:$max][] |
-      "**[" + .name + "](" + .url + ")** ★ " + (.stargazersCount | tostring) + " | `" + (.language // "代码") + "`\n\n" + (.description // "") + "\n"
-    ' "$json" 2>/dev/null || true
+    # 应用 max_projects_per_category 限制
+    # 使用 for loop + jq 分别处理每个元素，避免 shell 变量解析问题
+    local max_items
+    max_items=$(echo "$count" | awk "{if($count<$MAX_PROJECTS_PER_CATEGORY) print $count; else print $MAX_PROJECTS_PER_CATEGORY}")
+    for i in $(seq 0 $((max_items - 1))); do
+      jq -r --argjson idx "$i" '
+        if .[$idx] != null then
+          "**[" + .[$idx].name + "](" + .[$idx].url + ")** ★ " + (.[$idx].stargazersCount | tostring) + " | `" + (.[$idx].language // "代码") + "`\n\n" + (.[$idx].description // "") + "\n"
+        else
+          empty
+        end
+      ' "$json" 2>/dev/null || true
+    done
   fi
 }
 
