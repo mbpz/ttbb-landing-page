@@ -243,17 +243,18 @@ render_md_cards() {
   echo ""
   echo "### $section_name"
   echo ""
-  # 应用 max_projects_per_category 限制
-  jq -r ".[:$MAX_PROJECTS_PER_CATEGORY] | .[] | \"**[\" + .name + \"](\" + .url + \")** ★ \" + (.stargazerCount | tostring) + \" | \\`\" + (.primaryLanguage // "代码") + \"\\`\n\n\" + (.description // \"\") + \"\n\"" "$json" 2>/dev/null || true
+  if [[ "$count" -eq 0 ]]; then
+    echo "暂无项目数据"
+  else
+    # 应用 max_projects_per_category 限制
+    jq -r ".[:$MAX_PROJECTS_PER_CATEGORY] | .[] | \"**[\" + .name + \"](\" + .url + \")** ★ \" + (.stargazerCount | tostring) + \" | \\`\" + (.primaryLanguage // "代码") + \"\\`\n\n\" + (.description // \"\") + \"\n\"" "$json" 2>/dev/null || true
+  fi
 }
 
 cat > "$DAILY_DIR/$TODAY.md" << MD_HEADER
 ---
 title: AI + Code 每日速递 $TODAY
 description: 每日搜集 GitHub AI+Code 热门开源项目，MiniMax AI 分析技术趋势
-hide:
-  - navigation
-  - toc
 date: $TODAY
 ---
 

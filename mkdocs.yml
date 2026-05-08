@@ -79,10 +79,6 @@ extra:
 extra_css:
   - stylesheets/extra.css
 
-# === AUTO-GENERATED NAV SECTION - DO NOT EDIT MANUALLY ===
-# This section is automatically updated by scripts/ai-daily-generate.sh
-# Placeholder start
 nav:
   - 首页: index.md
   - 每日汇总: daily
-# Placeholder end
