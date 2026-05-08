@@ -122,9 +122,13 @@ if [[ -f "$RULES_FILE" ]] && command -v yq &>/dev/null && [[ "$DIMENSION_COUNT" 
 
     echo "  → [$i] $NAME (query: $QUERY, limit: $LIMIT)"
 
-    gh search repos "$QUERY" --limit "$LIMIT" --sort "$SORT" --order "$ORDER" \
+    echo "    执行: gh search repos \"$QUERY\" --limit $LIMIT --sort $SORT --order $ORDER"
+    if ! gh search repos "$QUERY" --limit "$LIMIT" --sort "$SORT" --order "$ORDER" \
       --json "$PROJECT_FIELDS" \
-      > "$TEMP/$LABEL.json" 2>/dev/null || echo "[]" > "$TEMP/$LABEL.json"
+      > "$TEMP/$LABEL.json" 2>&1; then
+      echo "    警告: gh search 失败，输出空数组"
+      echo "[]" > "$TEMP/$LABEL.json"
+    fi
 
     # 统计该项目数量
     DIM_PROJECTS=$(jq 'length' "$TEMP/$LABEL.json" 2>/dev/null || echo 0)
@@ -136,9 +140,13 @@ else
   search() {
     local q="$1" label="$2"
     echo "  → $label"
-    gh search repos "$q" --limit 15 --sort stars --order desc \
+    echo "    执行: gh search repos \"$q\" --limit 15 --sort stars --order desc"
+    if ! gh search repos "$q" --limit 15 --sort stars --order desc \
       --json "$PROJECT_FIELDS" \
-      > "$TEMP/$label.json" 2>/dev/null || echo "[]" > "$TEMP/$label.json"
+      > "$TEMP/$label.json" 2>&1; then
+      echo "    警告: gh search 失败，输出空数组"
+      echo "[]" > "$TEMP/$label.json"
+    fi
 
     # 统计该项目数量
     DIM_PROJECTS=$(jq 'length' "$TEMP/$label.json" 2>/dev/null || echo 0)
@@ -208,12 +216,18 @@ if [[ -n "$MINIMAX_API_KEY" && "$MINIMAX_API_KEY" != "dummy" && "$MINIMAX_API_KE
   echo "  调用 MiniMax API..."
   echo "  模型: $MODEL_NAME, Base URL: $MINIMAX_BASE_URL, Max Tokens: $MAX_TOKENS"
   PROMPT_CONTENT=$(build_summary_prompt | jq -Rs .)
-  API_RESPONSE=$(curl -s --fail \
+  HTTP_RESPONSE=$(curl -s -w "%{http_code}" -o "$API_RESPONSE_FILE" \
     -H "Authorization: Bearer $MINIMAX_API_KEY" \
     -H "Content-Type: application/json" \
     -d "{\"model\":\"$MODEL_NAME\",\"messages\":[{\"role\":\"user\",\"content\":$PROMPT_CONTENT}],\"max_tokens\":$MAX_TOKENS}" \
-    "$MINIMAX_BASE_URL/chat/completions" 2>/dev/null)
-  echo "$API_RESPONSE" > "$API_RESPONSE_FILE"
+    "$MINIMAX_BASE_URL/chat/completions" 2>&1)
+  API_RESPONSE=$(cat "$API_RESPONSE_FILE")
+  echo "  HTTP 状态码: $HTTP_RESPONSE"
+  if [[ "$HTTP_RESPONSE" -ge 400 ]]; then
+    echo "  错误: API 请求失败，响应内容:"
+    cat "$API_RESPONSE_FILE"
+    SUMMARY=""
+  fi
 
   # 提取摘要内容
   SUMMARY=$(echo "$API_RESPONSE" | jq -r '.choices[0].message.content // empty' || echo "")
