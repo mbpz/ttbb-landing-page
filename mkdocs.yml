@@ -10,13 +10,13 @@ theme:
   name: material
   language: zh
   palette:
-    - scheme: dark
+    - scheme: slate
       primary: indigo
       accent: cyan
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-    - scheme: light
+    - scheme: default
       primary: indigo
       accent: cyan
       toggle:
@@ -31,6 +31,8 @@ theme:
     - search.suggest
     - search.highlight
     - content.code.copy
+    - content.action.edit
+    - content.action.view
 
 plugins:
   - search
@@ -49,12 +51,20 @@ markdown_extensions:
   - pymdownx.mark
   - attr_list
   - md_in_html
+  - tables
+  - toc:
+      permalink: true
 
 extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/mbpz/ttbb-landing-page
+  generator: false
+
+extra_css:
+  - stylesheets/extra.css
 
 nav:
   - 首页: index.md
-  - 每日汇总: "daily/index.md"
+  - 每日汇总:
+      - "2026-05-08": daily/2026-05-08.md
