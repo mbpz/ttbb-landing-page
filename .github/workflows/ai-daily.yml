@@ -36,6 +36,9 @@ jobs:
         run: |
           pip install mkdocs-material 'mkdocs-git-revision-date-localized-plugin[jinja2]' ghp-import
 
+      - name: Ensure rules directory
+        run: mkdir -p rules
+
       - name: Run AI Daily Script
         env:
           MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
@@ -56,9 +59,15 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "docs: auto-update AI daily $(date +'%Y-%m-%d')"
+            ENTRY_COUNT=$(ls docs/daily/*.md 2>/dev/null | wc -l | tr -d ' ')
+            git commit -m "docs: auto-update AI daily $(date +'%Y-%m-%d') [$ENTRY_COUNT entries]"
             git push origin main || git push -u origin main
           fi
+
+      - name: Send failure notification
+        if: failure()
+        run: |
+          echo "::error::AI Daily workflow failed - please check the logs"
 
   deploy-pages:
     needs: generate-and-deploy

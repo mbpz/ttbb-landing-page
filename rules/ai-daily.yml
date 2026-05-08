@@ -1,0 +1,97 @@
+# AI Daily 规则配置
+# Phase 1 骨架 - 包含基础搜索维度配置
+# Phase 2 重构脚本读取此文件
+# Phase 3 精细化规则引擎
+
+search:
+  # 可配置的 GitHub 项目字段
+  project_fields: [name, description, url, stargazerCount, updatedAt, primaryLanguage]
+  dimensions:
+    - name: "AI编程助手"
+      query: "AI coding assistant"
+      limit: 15
+      sort: stars
+      order: desc
+      tags: ["tool"]
+    - name: "LLM Agent框架"
+      query: "LLM agent framework"
+      limit: 15
+      sort: stars
+      order: desc
+      tags: ["framework"]
+    - name: "AI代码审查"
+      query: "code review AI agent"
+      limit: 15
+      sort: stars
+      order: desc
+      tags: ["tool"]
+    - name: "MCP协议"
+      query: "MCP model context protocol"
+      limit: 15
+      sort: stars
+      order: desc
+      tags: ["architecture"]
+    - name: "AI软件开发"
+      query: "vibe coding OR AI software development"
+      limit: 15
+      sort: stars
+      order: desc
+      tags: ["product"]
+
+llm:
+  model: "MiniMax-Text-01"
+  base_url: "https://api.minimax.chat/v1"
+  max_tokens: 4000
+  system_prompt: |
+    你是 AI 技术观察员。请分析以下 GitHub trending 项目，用中文撰写一份结构化报告。
+
+    ## 输出格式（严格遵循）
+    ### 今日概览
+    [2-3句话总览整体趋势]
+
+    ### 重点推荐
+    - [项目名] — [一句话核心定位]
+
+    ### 技术趋势
+    - [趋势1]
+    - [趋势2]
+
+    ### 学习建议
+    - 新手：[建议]
+    - 进阶：[建议]
+    - 架构师：[建议]
+  # LLM 摘要段落结构模板
+  summary_structure:
+    overview: "今日概览"
+    highlights: "重点推荐"
+    trends: "技术趋势"
+    suggestions: "学习建议"
+
+output:
+  format: "markdown"
+  daily_dir: "docs/daily"
+  index_template: "docs/index.md"
+  date_format: "%Y年%m月%d日 %A"
+  # 每分类项目数量限制
+  max_projects_per_category: 15
+  # 自定义 admonition 类型
+  admonition:
+    info: "info"
+    warning: "warning"
+
+# 标签体系配置
+tags:
+  mapping:
+    tool: "工具类"
+    framework: "框架类"
+    architecture: "架构类"
+    product: "产品类"
+  colors:
+    tool: "blue"
+    framework: "green"
+    architecture: "purple"
+    product: "orange"
+
+# 环境变量覆盖支持
+env_override:
+  priority: ["MINIMAX_API_KEY", "MINIMAX_MODEL_NAME", "MINIMAX_BASE_URL"]

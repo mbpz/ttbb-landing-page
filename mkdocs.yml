@@ -39,6 +39,21 @@ plugins:
   - git-revision-date-localized:
       enable_creation_date: true
       type: date
+  - i18n:
+      docs_storage: false
+      fallback_to_default: true
+      reconfigure_my_language_to: en
+      retranslate:
+        - index
+      languages:
+        - locale: en
+          default: true
+          name: English
+          build: true
+          site_language: en
+        - locale: zh
+          name: 简体中文
+          build: false
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -64,7 +79,10 @@ extra:
 extra_css:
   - stylesheets/extra.css
 
+# === AUTO-GENERATED NAV SECTION - DO NOT EDIT MANUALLY ===
+# This section is automatically updated by scripts/ai-daily-generate.sh
+# Placeholder start
 nav:
   - 首页: index.md
-  - 每日汇总:
-      - "2026-05-08": daily/2026-05-08.md
+  - 每日汇总: daily
+# Placeholder end
