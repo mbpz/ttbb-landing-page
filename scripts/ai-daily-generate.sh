@@ -124,9 +124,9 @@ if [[ -f "$RULES_FILE" ]] && command -v yq &>/dev/null && [[ "$DIMENSION_COUNT" 
 
     echo "    执行: gh search repos \"$QUERY\" --limit $LIMIT --sort $SORT --order $ORDER"
     SEARCH_OUTPUT=$(gh search repos "$QUERY" --limit "$LIMIT" --sort "$SORT" --order "$ORDER" \
-      --json "$PROJECT_FIELDS" 2>&1)
+      --json "$PROJECT_FIELDS" 2>&1) || true
     SEARCH_EXIT=$?
-    if [[ $SEARCH_EXIT -eq 0 ]]; then
+    if [[ $SEARCH_EXIT -eq 0 ]] && echo "$SEARCH_OUTPUT" | jq -e '.[]' &>/dev/null; then
       echo "$SEARCH_OUTPUT" > "$TEMP/$LABEL.json"
     else
       echo "    错误: gh search 失败 (exit $SEARCH_EXIT)"
@@ -146,9 +146,9 @@ else
     echo "  → $label"
     echo "    执行: gh search repos \"$q\" --limit 15 --sort stars --order desc"
     SEARCH_OUTPUT=$(gh search repos "$q" --limit 15 --sort stars --order desc \
-      --json "$PROJECT_FIELDS" 2>&1)
+      --json "$PROJECT_FIELDS" 2>&1) || true
     SEARCH_EXIT=$?
-    if [[ $SEARCH_EXIT -eq 0 ]]; then
+    if [[ $SEARCH_EXIT -eq 0 ]] && echo "$SEARCH_OUTPUT" | jq -e '.[]' &>/dev/null; then
       echo "$SEARCH_OUTPUT" > "$TEMP/$label.json"
     else
       echo "    错误: gh search 失败 (exit $SEARCH_EXIT)"
