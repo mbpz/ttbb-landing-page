@@ -1,0 +1,12 @@
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# Temp files
+*.tmp
+*.temp
+
+# Data (keep structure but ignore generated content)
+docs/data/
