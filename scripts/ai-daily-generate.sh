@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
-# ai-daily-generate.sh — 搜集 GitHub 项目 + MiniMax AI 分析 + 生成 Markdown
-# Phase 2: 重写规则引擎，读取 rules/ai-daily.yml 配置
+# ai-daily-generate.sh — 搜集 GitHub 项目 + LLM AI 分析 + 生成 Markdown
+# 支持 MiniMax / DeepSeek 多厂商切换
 # =============================================================================
 set -euo pipefail
 
@@ -10,7 +10,10 @@ WEEKDAY=$(date +%A)
 READABLE_DATE=$(date +"%Y年%m月%d日 $WEEKDAY")
 TEMP=$(mktemp -d)
 GH_TOKEN="${GH_TOKEN:-}"
+# 向后兼容：保留旧变量名
 MINIMAX_API_KEY="${MINIMAX_API_KEY:-}"
+MINIMAX_BASE_URL="${MINIMAX_BASE_URL:-}"
+MINIMAX_MODEL_NAME="${MINIMAX_MODEL_NAME:-}"
 
 # 默认规则文件
 RULES_FILE="${RULES_FILE:-rules/ai-daily.yml}"
@@ -43,7 +46,7 @@ get_config_raw() {
 }
 
 # 读取环境变量覆盖配置
-ENV_PRIORITY=$(get_config_raw ".env_override.priority" "MINIMAX_API_KEY,MINIMAX_MODEL_NAME,MINIMAX_BASE_URL")
+ENV_PRIORITY=$(get_config_raw ".env_override.priority" "LLM_PROVIDER,LLM_API_KEY,LLM_BASE_URL,LLM_MODEL_NAME,MINIMAX_API_KEY,MINIMAX_MODEL_NAME,MINIMAX_BASE_URL")
 
 # 读取 search.project_fields（用于 gh --json）
 PROJECT_FIELDS=$(get_config_raw ".search.project_fields" "name,description,url,stargazersCount,updatedAt,language")
@@ -52,20 +55,51 @@ PROJECT_FIELDS=$(get_config_raw ".search.project_fields" "name,description,url,s
 TAG_MAPPING=$(get_config ".tags.mapping" "{}")
 TAG_COLORS=$(get_config ".tags.colors" "{}")
 
-# 读取 LLM 配置（带环境变量覆盖）
-# env_override 优先级: 环境变量 > yml 配置
-if [[ -n "${MINIMAX_MODEL_NAME:-}" ]]; then
-  MODEL_NAME="$MINIMAX_MODEL_NAME"
-else
-  MODEL_NAME=$(get_config ".llm.model // \"MiniMax-M2.7\"" "MiniMax-M2.7")
+# ==============================================================================
+# LLM 提供商解析（支持 MiniMax / DeepSeek 多厂商切换）
+# 优先级: 环境变量 > yml providers 预设 > 旧 MINIMAX_* 变量（向后兼容）
+# ==============================================================================
+
+# 1. 确定提供商
+LLM_PROVIDER="${LLM_PROVIDER:-}"
+if [[ -z "$LLM_PROVIDER" ]]; then
+  LLM_PROVIDER=$(get_config_raw ".llm.provider" "minimax")
 fi
 
-if [[ -n "${MINIMAX_BASE_URL:-}" ]]; then
-  MINIMAX_BASE_URL="$MINIMAX_BASE_URL"
-else
-  MINIMAX_BASE_URL=$(get_config ".llm.base_url // \"https://api.minimaxi.com/anthropic\"" "https://api.minimaxi.com/anthropic")
+# 2. 读取提供商预设（base_url、model、name）
+PROVIDER_NAME=$(get_config_raw ".llm.providers.${LLM_PROVIDER}.name" "$LLM_PROVIDER")
+PROVIDER_BASE_URL=$(get_config_raw ".llm.providers.${LLM_PROVIDER}.base_url" "")
+PROVIDER_MODEL=$(get_config_raw ".llm.providers.${LLM_PROVIDER}.model" "")
+PROVIDER_API_KEY_ENV=$(get_config_raw ".llm.providers.${LLM_PROVIDER}.api_key_env" "")
+
+# 3. API Key: LLM_API_KEY > 提供商预设的 api_key_env > MINIMAX_API_KEY(向后兼容)
+LLM_API_KEY="${LLM_API_KEY:-}"
+if [[ -z "$LLM_API_KEY" && -n "$PROVIDER_API_KEY_ENV" ]]; then
+  LLM_API_KEY="${!PROVIDER_API_KEY_ENV:-}"
+fi
+if [[ -z "$LLM_API_KEY" ]]; then
+  LLM_API_KEY="${MINIMAX_API_KEY:-}"
 fi
 
+# 4. Base URL: LLM_BASE_URL > 提供商 base_url > MINIMAX_BASE_URL(向后兼容)
+LLM_BASE_URL="${LLM_BASE_URL:-}"
+if [[ -z "$LLM_BASE_URL" ]]; then
+  LLM_BASE_URL="$PROVIDER_BASE_URL"
+fi
+if [[ -z "$LLM_BASE_URL" ]]; then
+  LLM_BASE_URL="${MINIMAX_BASE_URL:-}"
+fi
+
+# 5. Model: LLM_MODEL_NAME > 提供商 model > MINIMAX_MODEL_NAME(向后兼容)
+LLM_MODEL_NAME="${LLM_MODEL_NAME:-}"
+if [[ -z "$LLM_MODEL_NAME" ]]; then
+  LLM_MODEL_NAME="$PROVIDER_MODEL"
+fi
+if [[ -z "$LLM_MODEL_NAME" ]]; then
+  LLM_MODEL_NAME="${MINIMAX_MODEL_NAME:-}"
+fi
+
+# 通用配置
 MAX_TOKENS=$(get_config ".llm.max_tokens // 4000" "4000")
 SYSTEM_PROMPT=$(get_config_raw ".llm.system_prompt" "")
 
@@ -274,7 +308,7 @@ render_md_cards() {
     echo "暂无项目数据"
   else
     # 应用 max_projects_per_category 限制
-    jq -r ".[:$MAX_PROJECTS_PER_CATEGORY] | .[] | \"**[\" + .name + \"](\" + .url + \")** ★ \" + (.stargazersCount | tostring) + \" | \\`\" + (.language // "代码") + \"\\`\n\n\" + (.description // \"\") + \"\n\"" "$json" 2>/dev/null || true
+    jq -r ".[:$MAX_PROJECTS_PER_CATEGORY] | .[] | \"**[\" + .name + \"](\" + .url + \")** ★ \" + (.stargazersCount | tostring) + \" | \\`\" + (if .language then .language else \"代码\" end) + \"\\`\n\n\" + (if .description then .description else \"\" end) + \"\n\"" "$json" 2>/dev/null || true
   fi
 }
 

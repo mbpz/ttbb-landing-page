@@ -8,8 +8,8 @@
 *.tmp
 *.temp
 
-# Data (keep structure but ignore generated content)
-docs/data/
+# Data - DO NOT IGNORE (archived JSON data is committed)
+# docs/data/
 
 # MkDocs build output (built fresh by deploy-pages job)
 site/
