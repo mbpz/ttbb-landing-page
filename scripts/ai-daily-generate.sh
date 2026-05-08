@@ -259,15 +259,15 @@ DEFAULT_PROMPT
 
 SUMMARY=""
 API_RESPONSE_FILE="$TEMP/api_response.json"
-if [[ -n "$MINIMAX_API_KEY" && "$MINIMAX_API_KEY" != "dummy" && "$MINIMAX_API_KEY" != "sk-" ]]; then
+if [[ -n "$LLM_API_KEY" && "$LLM_API_KEY" != "dummy" && "$LLM_API_KEY" != "sk-" ]]; then
   echo "  调用 MiniMax API..."
-  echo "  模型: $MODEL_NAME, Base URL: $MINIMAX_BASE_URL, Max Tokens: $MAX_TOKENS"
+  echo "  模型: $LLM_MODEL_NAME, Base URL: $LLM_BASE_URL, Max Tokens: $MAX_TOKENS"
   PROMPT_CONTENT=$(build_summary_prompt | jq -Rs .)
   HTTP_RESPONSE=$(curl -s -w "%{http_code}" -o "$API_RESPONSE_FILE" \
-    -H "Authorization: Bearer $MINIMAX_API_KEY" \
+    -H "Authorization: Bearer $LLM_API_KEY" \
     -H "Content-Type: application/json" \
-    -d "{\"model\":\"$MODEL_NAME\",\"messages\":[{\"role\":\"user\",\"content\":$PROMPT_CONTENT}],\"max_tokens\":$MAX_TOKENS}" \
-    "$MINIMAX_BASE_URL/chat/completions" 2>&1)
+    -d "{\"model\":\"$LLM_MODEL_NAME\",\"messages\":[{\"role\":\"user\",\"content\":$PROMPT_CONTENT}],\"max_tokens\":$MAX_TOKENS}" \
+    "$LLM_BASE_URL/chat/completions" 2>&1)
   API_RESPONSE=$(cat "$API_RESPONSE_FILE")
   echo "  HTTP 状态码: $HTTP_RESPONSE"
   if [[ "$HTTP_RESPONSE" -ge 400 ]]; then
@@ -356,7 +356,7 @@ fi
 
 echo "" >> "$DAILY_DIR/$TODAY.md"
 echo '=== "数据来源"' >> "$DAILY_DIR/$TODAY.md"
-echo "GitHub Trending · AI 分析：MiniMax $MODEL_NAME · 最后更新：$READABLE_DATE" >> "$DAILY_DIR/$TODAY.md"
+echo "GitHub Trending · AI 分析：MiniMax $LLM_MODEL_NAME · 最后更新：$READABLE_DATE" >> "$DAILY_DIR/$TODAY.md"
 
 # ------------------------------------------------------------------------------
 echo "=== [5/7] 确认 MkDocs 导航 ==="
