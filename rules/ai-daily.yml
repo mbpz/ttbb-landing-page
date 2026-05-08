@@ -5,7 +5,7 @@
 
 search:
   # 可配置的 GitHub 项目字段（逗号分隔字符串）
-  project_fields: "name,description,url,stargazerCount,updatedAt,primaryLanguage"
+  project_fields: "name,description,url,stargazersCount,updatedAt,language"
   dimensions:
     - name: "AI编程助手"
       query: "AI coding assistant"

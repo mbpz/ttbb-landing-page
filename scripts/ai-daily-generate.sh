@@ -46,7 +46,7 @@ get_config_raw() {
 ENV_PRIORITY=$(get_config_raw ".env_override.priority" "MINIMAX_API_KEY,MINIMAX_MODEL_NAME,MINIMAX_BASE_URL")
 
 # 读取 search.project_fields（用于 gh --json）
-PROJECT_FIELDS=$(get_config_raw ".search.project_fields" "name,description,url,stargazerCount,updatedAt,primaryLanguage")
+PROJECT_FIELDS=$(get_config_raw ".search.project_fields" "name,description,url,stargazersCount,updatedAt,language")
 
 # 读取 tags 配置
 TAG_MAPPING=$(get_config ".tags.mapping" "{}")
@@ -86,7 +86,7 @@ ADMONITION_INFO=$(get_config ".output.admonition.info // \"info\"" "info")
 ADMONITION_WARNING=$(get_config ".output.admonition.warning // \"warning\"" "warning")
 
 # ------------------------------------------------------------------------------
-echo "=== [1/6] 读取规则配置 ==="
+echo "=== [1/7] 读取规则配置 ==="
 if [[ -f "$RULES_FILE" ]]; then
   echo "  使用规则: $RULES_FILE"
   if command -v yq &>/dev/null; then
@@ -102,7 +102,7 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-echo "=== [2/6] 搜索 GitHub 项目 ==="
+echo "=== [2/7] 搜索 GitHub 项目 ==="
 
 # 用于统计总数
 TOTAL_PROJECTS=0
@@ -182,7 +182,7 @@ done
 echo "  JSON 数据保存在: $TEMP/"
 
 # ------------------------------------------------------------------------------
-echo "=== [3/6] 调用 MiniMax API 生成 AI 摘要 ==="
+echo "=== [3/7] 调用 MiniMax API 生成 AI 摘要 ==="
 
 build_summary_prompt() {
   # 使用配置中的 system_prompt 或默认模板
@@ -261,7 +261,7 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-echo "=== [4/6] 生成每日 Markdown 页面 ==="
+echo "=== [4/7] 生成每日 Markdown 页面 ==="
 
 render_md_cards() {
   local json="$1" section_name="$2"
@@ -274,7 +274,7 @@ render_md_cards() {
     echo "暂无项目数据"
   else
     # 应用 max_projects_per_category 限制
-    jq -r ".[:$MAX_PROJECTS_PER_CATEGORY] | .[] | \"**[\" + .name + \"](\" + .url + \")** ★ \" + (.stargazerCount | tostring) + \" | \\`\" + (.primaryLanguage // "代码") + \"\\`\n\n\" + (.description // \"\") + \"\n\"" "$json" 2>/dev/null || true
+    jq -r ".[:$MAX_PROJECTS_PER_CATEGORY] | .[] | \"**[\" + .name + \"](\" + .url + \")** ★ \" + (.stargazersCount | tostring) + \" | \\`\" + (.language // "代码") + \"\\`\n\n\" + (.description // \"\") + \"\n\"" "$json" 2>/dev/null || true
   fi
 }
 
@@ -325,7 +325,7 @@ echo '=== "数据来源"' >> "$DAILY_DIR/$TODAY.md"
 echo "GitHub Trending · AI 分析：MiniMax $MODEL_NAME · 最后更新：$READABLE_DATE" >> "$DAILY_DIR/$TODAY.md"
 
 # ------------------------------------------------------------------------------
-echo "=== [5/6] 确认 MkDocs 导航 ==="
+echo "=== [5/7] 确认 MkDocs 导航 ==="
 # MkDocs 通过 mkdocs.yml 中的 nav 配置自动读取 docs/daily/*.md
 # 确保当日文件存在即可
 if [[ -f "$DAILY_DIR/$TODAY.md" ]]; then
@@ -335,7 +335,7 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-echo "=== [6/6] 归档原始 JSON 数据 ==="
+echo "=== [6/7] 归档原始 JSON 数据 ==="
 ARCHIVE_DIR="docs/data/$TODAY"
 mkdir -p "$ARCHIVE_DIR"
 if [[ -d "$TEMP" ]]; then
