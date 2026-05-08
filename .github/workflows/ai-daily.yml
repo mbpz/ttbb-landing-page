@@ -41,8 +41,10 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
-        run: pip install yq jq
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq jq
+          pip install yq
 
       - name: Ensure directories
         run: |
@@ -52,7 +54,7 @@ jobs:
       - name: Run AI Daily Script
         env:
           MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
-          MINIMAX_BASE_URL: ${{ secrets.MINIMAX_BASE_URL || 'https://api.minimaxi.com/anthropic' }}
+          MINIMAX_BASE_URL: ${{ secrets.MINIMAX_BASE_URL || 'https://api.minimax.chat/v1' }}
           MINIMAX_MODEL_NAME: ${{ secrets.MINIMAX_MODEL_NAME || 'MiniMax-M2.7' }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
