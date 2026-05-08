@@ -57,7 +57,7 @@ TAG_COLORS=$(get_config ".tags.colors" "{}")
 if [[ -n "${MINIMAX_MODEL_NAME:-}" ]]; then
   MODEL_NAME="$MINIMAX_MODEL_NAME"
 else
-  MODEL_NAME=$(get_config ".llm.model // \"MiniMax-Text-01\"" "MiniMax-Text-01")
+  MODEL_NAME=$(get_config ".llm.model // \"MiniMax-M2.7\"" "MiniMax-M2.7")
 fi
 
 if [[ -n "${MINIMAX_BASE_URL:-}" ]]; then

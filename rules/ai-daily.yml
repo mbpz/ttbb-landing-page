@@ -39,7 +39,7 @@ search:
       tags: ["product"]
 
 llm:
-  model: "MiniMax-Text-01"
+  model: "MiniMax-M2.7"
   base_url: "https://api.minimax.chat/v1"
   max_tokens: 4000
   system_prompt: |
