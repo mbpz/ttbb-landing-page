@@ -1,0 +1,1 @@
+{"type":"error","error":{"type":"rate_limit_error","message":"usage limit exceeded, 5-hour usage limit reached for Token Plan Plus (1500/1500 used), resets at 2026-05-13T15:00:00+08:00 (2056)","http_code":"429"},"request_id":"065333ba1e06e5ae48b5f3984446b6bd"}
